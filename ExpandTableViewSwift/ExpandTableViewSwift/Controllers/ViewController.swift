@@ -9,41 +9,38 @@ import UIKit
 
 class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource {
     @IBOutlet var mainTableView: UITableView!
-    var array:[HeaderTitle] = []
+    var viewmodel:ViewModel!
     var indexPathArray:[IndexPath]=[]
     var isExpanded:Bool!=false
-    func initialValues(){
-        mainTableView.delegate = self
-        mainTableView.dataSource = self
-        mainTableView.separatorStyle = .none
-        array.append(HeaderTitle(title: "Expanding row - 1.0"))
-        array.append(HeaderTitle(title: "Expanding row - 2.0"))
-        array.append(HeaderTitle(title: "Expanding row - 3.0"))
-        array.append(HeaderTitle(title: "Expanding row - 4.0"))
-        array.append(HeaderTitle(title: "Expanding row - 5.0"))
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        initialValues()
+        initialView()
         // Do any additional setup after loading the view.
     }
     
     
 }
 extension ViewController{
+    func initialView(){
+        mainTableView.delegate = self
+        mainTableView.dataSource = self
+        viewmodel = ViewModel()
+        viewmodel.fetchInitialValues { array in
+            self.mainTableView.reloadData()
+        }
+    }
     func numberOfSections(in tableView: UITableView) -> Int {
         return  5
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 5
+        return viewmodel.arrayTitles.count
     }
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        return createHeader(section:section, arrayHeader: array)
+        let view = createHeader(section:section, arrayHeader: viewmodel.arrayTitles)
+        view.bringSubviewToFront(mainTableView)
+        return view
     }
-    
-    
-    
+
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         return 60.0
     }
@@ -60,13 +57,13 @@ extension ViewController{
             cell.textLabel?.text = "Expand row - " + String(indexPath.section+1) + "." + String(indexPath.row)
         }
         else{
-            cell.textLabel?.text = array[indexPath.row].title
+            cell.textLabel?.text = viewmodel.arrayTitles[indexPath.row].title
         }
         return cell
     }
     
     func createHeader(section:Int,arrayHeader:[HeaderTitle])->UIView{
-        let view = HeaderView.shared.createHeader(section: section, arrayHeader: array)
+        let view = HeaderView.shared.createHeader(section: section, arrayHeader: viewmodel.sharedData.array)
         let gesture = UITapGestureRecognizer(target: self, action: #selector(expandCell(sender:)))
         gesture.numberOfTapsRequired = 1
         view.addGestureRecognizer(gesture)
